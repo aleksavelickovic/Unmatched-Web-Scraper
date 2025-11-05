@@ -35,4 +35,8 @@ def browser():
 def test_scrape_page(browser: 'WebDriver'):
     browser.get("https://www.umleague.net/fighterstats")
 
-    sleep(SLEEP_TIME)
+    sleep(10)
+
+    select_hero = browser.find_element(By.ID, 'selectHero')
+    select_hero.click()
+    sleep(5)
