@@ -1,3 +1,5 @@
+from time import sleep
+
 import pytest
 import time
 
@@ -8,6 +10,8 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select
 import chromedriver_autoinstaller
+
+SLEEP_TIME = 25  # Prilagoditi broj shodno brzini vase internet konekcije
 
 
 @pytest.fixture()
@@ -26,3 +30,9 @@ def browser():
     yield driver
 
     driver.quit()
+
+
+def test_scrape_page(browser: 'WebDriver'):
+    browser.get("https://www.umleague.net/fighterstats")
+
+    sleep(SLEEP_TIME)
