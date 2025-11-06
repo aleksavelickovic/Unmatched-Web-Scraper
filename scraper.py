@@ -9,19 +9,20 @@ SLEEP_TIME = 25  # Prilagoditi broj shodno brzini vase internet konekcije
 
 
 def get_matching_requests(browser):
-    events = browser.get_log("performance")
+    requests = browser.get_log("performance")  # Spisak svih HTTP zahteva
     results = []
 
-    for e in events:
-        message = json.loads(e["message"])["message"]
+    for request in requests:
+        message = json.loads(request["message"])["message"]  # Deserijalizacija
         method = message.get("method", "")
         params = message.get("params", {})
         # response = params.get("response", {})
         # status = response.get("statusText")
         # print("STATUS ODGOVORA JE: " + status)
 
-        if method == "Network.responseReceived":
-            url = params["response"]["url"]
+        if method == "Network.responseReceived":  # Uzimamo samo HTTP odgovore, ne i zahteve
+            url = params["response"][
+                "url"]  # Ako se URL zahteva poklapa sa linijom dole, uzecemo ga u obzir (ovako filtriramo zahteve tako da uzmemo samo one koji se dese kada promenimo combobox
             if "https://www.umleague.net/api/analytics/getHeroResultsByMap" in url:  # TODO vrati samo uspesne odgovore!
                 results.append(params["requestId"])
 
@@ -29,26 +30,27 @@ def get_matching_requests(browser):
 
 
 def get_response_body(browser, request_id):
-    try:
-        body = browser.execute_cdp_cmd("Network.getResponseBody", {"requestId": request_id})
-        data = body["body"]
-        if body.get("base64Encoded", False):
-            data = base64.b64decode(data).decode("utf-8")
-        return data
-    except:
-        return None
+    body = browser.execute_cdp_cmd("Network.getResponseBody",
+                                   {"requestId": request_id})  # CDP komanda za hvatanje tela odgovora
+    data = body["body"]  # body koji komanda vraca je zapravo JSON sa dodatnim podacima,
+    # pa nam treba specificno polje body
+
+    if body.get("base64Encoded", False):
+        data = base64.b64decode(data).decode("utf-8")  # Dekodiramo body iz cega god je kodirano (Bice da njihov backend
+        # vraca body enkodiran pomocu Brotli algoritma)
+    return data
 
 
 def test_scrape_page():
-    options = uc.ChromeOptions()
-    options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    options = uc.ChromeOptions()  # Osnovne Chromium opcije
+    options.set_capability("goog:loggingPrefs", {"performance": "ALL"})  # Belezimo sve performance logove
 
-    browser = uc.Chrome(options=options)
-    browser.execute_cdp_cmd("Network.enable", {})
-    browser.implicitly_wait(10)
+    browser = uc.Chrome(options=options)  # Instanciramo Chromium webDriver
+    browser.execute_cdp_cmd("Network.enable", {})  # Omogucavamo CDP (Chrome Devtools Protocol)
+    browser.implicitly_wait(10)  # webDriver po default-u ceka 10 sekundi na izvrsenje komande
 
     browser.get("https://www.umleague.net/fighterstats")
-    sleep(15)
+    sleep(15)  # Cekamo malo duze da se ucita stranica
 
     select_hero_element = browser.find_element(By.ID, "selectHero")
     browser.execute_script("arguments[0].scrollIntoView();", select_hero_element)
@@ -60,16 +62,13 @@ def test_scrape_page():
         option.click()
         sleep(SLEEP_TIME)
 
-    request_ids = get_matching_requests(browser)
+    requestIds = get_matching_requests(browser)
 
-    print(f"Captured {len(request_ids)} API calls")
-
-    for idx, req_id in enumerate(request_ids, start=1):
-        body = get_response_body(browser, req_id)
-        if body:
-            filename = f"hero_results_{idx}.json"
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(body)
-            print(f"[+] Saved → {filename}")
+    for requestNo, requestId in enumerate(requestIds, start=1):
+        body = get_response_body(browser, requestId)
+        filename = f"hero_results_{requestNo}.json"
+        with open(filename, "w", encoding="utf-8") as f:  # Upisujemo body HTTP response-a u fajl
+            f.write(body)
+        print(f"Sacuvan JSON:  {filename}")
 
     browser.quit()
