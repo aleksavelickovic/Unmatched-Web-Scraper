@@ -61,8 +61,8 @@ def test_scrape_page_v3():
     select_hero = Select(select_hero_element)
 
     for i, option in enumerate(select_hero.options):
-        if i >= 2:
-            break
+        if i >= 2:  ## Zakomentarisati ove dve linije koda
+            break  ## Ako je cilj uzeti JSON za sve <option> tagove
         option.click()
         sleep(SLEEP_TIME)
 
