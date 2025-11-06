@@ -1,14 +1,8 @@
 import base64
 import json
-from http.client import responses
-
-from encodings.utf_16 import decode
 from time import sleep
-
 from selenium.webdriver.common.by import By
-
 from selenium.webdriver.support.ui import Select
-
 import undetected_chromedriver as uc
 
 SLEEP_TIME = 25  # Prilagoditi broj shodno brzini vase internet konekcije
@@ -45,7 +39,7 @@ def get_response_body(browser, request_id):
         return None
 
 
-def test_scrape_page_v3():
+def test_scrape_page():
     options = uc.ChromeOptions()
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
 
