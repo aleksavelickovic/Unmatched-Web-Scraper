@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import Select
 import chromedriver_autoinstaller
+import undetected_chromedriver as uc
 
 SLEEP_TIME = 25  # Prilagoditi broj shodno brzini vase internet konekcije
 
@@ -23,7 +24,7 @@ SLEEP_TIME = 25  # Prilagoditi broj shodno brzini vase internet konekcije
 #     options.add_argument("--disable-web-security")
 #     options.add_argument("--disable-site-isolation-trials")
 #     # kreiraj instancu drajvera za test
-#     driver = webdriver.Chrome(options=options)
+#     driver = uc.Chrome(options=options)
 #
 #     driver.implicitly_wait(10)
 #
@@ -33,11 +34,14 @@ SLEEP_TIME = 25  # Prilagoditi broj shodno brzini vase internet konekcije
 
 
 def test_scrape_page():
-    browser = webdriver.Chrome()
+    options = webdriver.ChromeOptions()
+    # neophodno odraditi ovo zbog problema sa CORS
+    options.add_argument("--disable-web-security")
+    options.add_argument("--disable-site-isolation-trials")
+    browser = uc.Chrome(options=options)
+    browser.implicitly_wait(10)
 
     browser.get("https://www.umleague.net/fighterstats")
-
-    sleep(10)
 
     select_hero_element = browser.find_element(By.ID, 'selectHero')
     # select_hero_element.click()
@@ -47,11 +51,13 @@ def test_scrape_page():
     limiter = 0
     select_hero = Select(select_hero_element)
     for option in select_hero.options:
-        while limiter < 2:
+        while limiter < 12:
             option.click()
             sleep(SLEEP_TIME)
             limiter += 1
 
-    # for request in browser.requests
+    # for request in driver.requests
+
+    browser.quit()
 
 # sleep(5)
