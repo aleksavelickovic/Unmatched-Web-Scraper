@@ -20,7 +20,6 @@ def cut_string(url):
     return None
 
 
-
 def get_matching_requests(browser):
     requests = browser.get_log("performance")  # Spisak svih HTTP zahteva
     results = {}
@@ -31,13 +30,14 @@ def get_matching_requests(browser):
         params = message.get("params", {})
         response = params.get("response", {})
         status = response.get("status")
-        
+
         if status == None:
-            continue   
+            continue
         if status != 200 and status != 304:
             continue
         if method == "Network.responseReceived":  # Uzimamo samo HTTP odgovore, ne i zahteve
-            url = params["response"]["url"]  # Ako se URL zahteva poklapa sa linijom dole, uzecemo ga u obzir (ovako filtriramo zahteve tako da uzmemo samo one koji se dese kada promenimo combobox
+            url = params["response"][
+                "url"]  # Ako se URL zahteva poklapa sa linijom dole, uzecemo ga u obzir (ovako filtriramo zahteve tako da uzmemo samo one koji se dese kada promenimo combobox
             if "https://www.umleague.net/api/analytics/getHeroResultsByMap" in url:  # TODO vrati samo uspesne odgovore!
                 results[params["requestId"]] = request
                 print("STATUS ODGOVORA JE: " + str(status))
@@ -45,7 +45,8 @@ def get_matching_requests(browser):
 
 
 def get_response_body(browser, request_id):
-    body = browser.execute_cdp_cmd("Network.getResponseBody", {"requestId": request_id})  # CDP komanda za hvatanje tela odgovora
+    body = browser.execute_cdp_cmd("Network.getResponseBody",
+                                   {"requestId": request_id})  # CDP komanda za hvatanje tela odgovora
     data = body["body"]  # body koji komanda vraca je zapravo JSON sa dodatnim podacima,
     # pa nam treba specificno polje body
 
@@ -55,7 +56,7 @@ def get_response_body(browser, request_id):
     return data
 
 
-def test_scrape_page():
+def scrape_page():
     options = uc.ChromeOptions()  # Osnovne Chromium opcije
     options.set_capability("goog:loggingPrefs", {"performance": "ALL"})  # Belezimo sve performance logove
 
@@ -91,6 +92,6 @@ def test_scrape_page():
         print(f"\nSacuvan JSON:  {filename}")
 
     browser.quit()
-test_scrape_page()
 
-    
+
+scrape_page()
